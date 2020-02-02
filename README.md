@@ -1,1 +1,1 @@
-# CSCE410-2020-A
+# Project 2
