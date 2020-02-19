@@ -132,13 +132,31 @@ ContFramePool::ContFramePool(unsigned long _base_frame_no,
                              unsigned long _info_frame_no,
                              unsigned long _n_info_frames)
 {
-    // TODO: IMPLEMENTATION NEEEDED!
+    assert(_n_frames <= FRAME_SIZE * 8); //ensure the number of frames doesn't exceed what's available
+
+    //set variables
+    base_frame_no = _base_frame_no;
+    nframes = _nframes;
+    nFreeFrames = _nframes;
+    info_frame_no = _info_frame_no;
+    n_info_frames = _n_info_frames;
+
+    if(info_frame_no == 0)
+        bitmap = (unsigned char *) (base_frame_no * FRAME_SIZE);
+    else
+        bitmap = (unsigned char *) (info_frame_no * FRAME_SIZE);
+
+    if(info_frame_no == 0){
+    }
+
+
+
     assert(false);
 }
 
 unsigned long ContFramePool::get_frames(unsigned int _n_frames)
 {
-    // TODO: IMPLEMENTATION NEEEDED!
+    
     assert(false);
 }
 
@@ -158,5 +176,28 @@ void ContFramePool::release_frames(unsigned long _first_frame_no)
 unsigned long ContFramePool::needed_info_frames(unsigned long _n_frames)
 {
     // TODO: IMPLEMENTATION NEEEDED!
+    assert(false);
+}
+
+void set_bitmap(unsigned long start, unsigned long length)
+{
+    bitmap[start - (start % 4)] = 0x3F; //set first position of the frame to be occupied and head of sequence (00)
+
+    unsigned long index = start + 1;
+
+    for(unsigned long i = 0; i < length; i++){
+        //set the following frames in the sequence to be 01, or occurpied but not head of squence. I's using bitwise AND for this
+        if(index % 4 == 0)
+            bitmap[index - (index % 4)] = bitmap[start - (index % 4)] & 0x7F;
+        else if(index % 4 == 1)
+            bitmap[start - (index % 4)] = bitmap[start - (index % 4)] & 0xFF;
+        else if(index % 4 == 2)
+            bitmap[start - (index % 4)] = bitmap[start - (index % 4)] & 0xF7;
+        else if(index % 4 == 3)
+            bitmap[start - (index % 4)] = bitmap[start - (index % 4)] & 0xFD;
+
+        index++;
+    }
+
     assert(false);
 }
