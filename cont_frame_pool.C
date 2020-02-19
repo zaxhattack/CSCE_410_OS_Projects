@@ -151,18 +151,12 @@ ContFramePool::ContFramePool(unsigned long _base_frame_no,
         bitmap[i] = 0xFF;
     }
 
-    if(info_frame_no == 0){
-    }
+    set_bitmap(info_frame_no, n_info_frames); //set the info frames
 
-    if(_info_frame_no == 0) {
-        bitmap[0] = 0x7F;
-        nFreeFrames--;
-    }
-
-    assert(false);
+    Console::puts("Frame Pool initialized\n");
 }
 
-unsigned long ContFramePool::get_frames(unsigned int _n_frames)
+unsigned long ContFramePool::get_frames(unsigned int _n_frames) //for this I'm using FIRST FIT implementation
 {
     assert(nFreeFrames >= _n_frames);
 
@@ -233,6 +227,7 @@ unsigned long ContFramePool::needed_info_frames(unsigned long _n_frames)
 
 void set_bitmap(unsigned long start, unsigned long length)
 {
+
     bitmap[start - (start % 4)] = 0x3F; //set first position of the frame to be occupied and head of sequence (00)
 
     unsigned long index = start + 1;
