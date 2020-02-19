@@ -46,8 +46,9 @@ private:
     unsigned char * bitmap; //bitmap of the frames
     unsigned long base_frame_no; //the start of the frames in memory
     unsigned long nFreeFrames; //The number of free frames available
-    unsigned long _n_frames; //frame pool size
-    unsigned long _n_info_frames; //the frame where info is stored
+    unsigned long n_frames; //frame pool size
+    unsigned long info_frame_no; //the frame where info is stored
+    unsigned long n_info_frames; //the number of frames needed for management
     
 public:
 
@@ -121,5 +122,9 @@ public:
      Other implementations need a different number of info frames.
      The exact number is computed in this function..
      */
+
+    void set_bitmap(unsigned long start, unsigned long length);
+    //simple function to manipulate the bitmap based on the length of the frame sequence and the first position of the frame sequence
+
 };
 #endif
