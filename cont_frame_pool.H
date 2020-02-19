@@ -42,6 +42,12 @@ class ContFramePool {
     
 private:
     /* -- DEFINE YOUR CONT FRAME POOL DATA STRUCTURE(s) HERE. */
+
+    unsigned char * bitmap; //bitmap of the frames
+    unsigned long base_frame_no; //the start of the frames in memory
+    unsigned long nFreeFrames; //The number of free frames available
+    unsigned long _n_frames; //frame pool size
+    unsigned long _n_info_frames; //the frame where info is stored
     
 public:
 
