@@ -146,18 +146,70 @@ ContFramePool::ContFramePool(unsigned long _base_frame_no,
     else
         bitmap = (unsigned char *) (info_frame_no * FRAME_SIZE);
 
+    //initialize each bit to 1 in the bitmap
+    for(int i=0; i*8 < _nframes; i++) {
+        bitmap[i] = 0xFF;
+    }
+
     if(info_frame_no == 0){
     }
 
-
+    if(_info_frame_no == 0) {
+        bitmap[0] = 0x7F;
+        nFreeFrames--;
+    }
 
     assert(false);
 }
 
 unsigned long ContFramePool::get_frames(unsigned int _n_frames)
 {
+    assert(nFreeFrames >= _n_frames);
+
+    unsigned long position = 0;
+    unsigned long frame_start = 0;
+    unsigned long i = 0;
+    unsigned long length = 0;
+
+    unsigned char mask = 0xC0;
+    while(1){
+        //The first while loop looks for a bitmap entry of 11, indicating a free frame
+        while ((mask & bitmap[i]) != 0xC0 && (mask & bitmap[i]) != 0x30 && (mask & bitmap[i]) != 0xC && (mask & bitmap[i]) != 0x03) {
+            mask = mask >> 2;
+            position++;
+            if(position % 4 == 0)
+                i++;
+        }
+        //once a free frame is found, record this as the start position of the sequence and count how many frames are free afterwards
+        frame_start = position;
+        while ((mask & bitmap[i]) == 0xC0 || (mask & bitmap[i]) == 0x30 || (mask & bitmap[i]) == 0xC || (mask & bitmap[i]) == 0x03) {
+            mask = mask >> 2;
+            position++;
+            length++;
+            if(position % 4 == 0)
+                i++;
+
+            //if we run out reach the end of our frames, we have no more free frames to allocate for this request, and we crash
+            if(position = n_frames)
+                asset(false);
+
+            //if we have enough frames in the sequence, break out of this loop
+            if(length == _n_frames)
+                break;
+        }
+
+        ///if we have enough frames in the sequence, break out of this loop as well and record how many free frames we have left total
+        if(length = _n_frames){
+            nFreeFrames = nFreeFrames - _n_frames;
+            break;
+        }
+    }
     
-    assert(false);
+    //if we got out of the loop above successfully, we have a frame number recorded for us to use as the start of the sequence. 
+    //Send it and the length of the sequence to the set_bitmap function, and return the position of the frame sequence
+    set_bitmap(frame_start, _n_frames); //Reserve the frames on the bitmap
+
+    return(frame_start + base_frame_no);
 }
 
 void ContFramePool::mark_inaccessible(unsigned long _base_frame_no,
@@ -199,5 +251,5 @@ void set_bitmap(unsigned long start, unsigned long length)
         index++;
     }
 
-    assert(false);
+    nFreeFrames = nFreeFrames - length;
 }
