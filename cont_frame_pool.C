@@ -136,8 +136,8 @@ ContFramePool::ContFramePool(unsigned long _base_frame_no,
 
     //set variables
     base_frame_no = _base_frame_no;
-    nframes = _nframes;
-    nFreeFrames = _nframes;
+    n_frames = _n_frames;
+    nFreeFrames = _n_frames;
     info_frame_no = _info_frame_no;
     n_info_frames = _n_info_frames;
 
@@ -145,11 +145,6 @@ ContFramePool::ContFramePool(unsigned long _base_frame_no,
         bitmap = (unsigned char *) (base_frame_no * FRAME_SIZE);
     else
         bitmap = (unsigned char *) (info_frame_no * FRAME_SIZE);
-
-    //initialize each bit to 1 in the bitmap
-    for(int i=0; i*8 < _nframes; i++) {
-        bitmap[i] = 0xFF;
-    }
 
     set_bitmap(info_frame_no, n_info_frames); //set the info frames
 
@@ -184,8 +179,10 @@ unsigned long ContFramePool::get_frames(unsigned int _n_frames) //for this I'm u
                 i++;
 
             //if we run out reach the end of our frames, we have no more free frames to allocate for this request, and we crash
-            if(position = n_frames)
-                asset(false);
+            if(position = n_frames){
+                Console::puts("Error: No more free holes for allocation\n");
+                assert(false);
+            }
 
             //if we have enough frames in the sequence, break out of this loop
             if(length == _n_frames)
@@ -215,33 +212,68 @@ void ContFramePool::mark_inaccessible(unsigned long _base_frame_no,
 
 void ContFramePool::release_frames(unsigned long _first_frame_no)
 {
-    // TODO: IMPLEMENTATION NEEEDED!
-    assert(false);
+    unsigned int bitmap_index = _first_frame_no - base_frame_no;
+
+    unsigned long count = 1;
+
+    if((bitmap[bitmap_index] & mask) != 0) {
+        Console::puts("Error, Frame being released is not being used\n");
+        assert(false);
+    }
+    //set the first frame to 11
+    unsigned char mask = 0xC0 >> ((bitmap_index % 4) * 2);
+    
+    //keep going, setting each 01 to 11, until we got to either a 11 or a 00, indication we have traversed the entire sequence
+    unsigned long position = bitmap_index % 4;
+    unsigned long i = bitmap_index - position;
+    while ((mask & bitmap[i]) == 0x40 || (mask & bitmap[i]) == 0x10 || (mask & bitmap[i]) == 0x04 || (mask & bitmap[i]) == 0x01) {
+
+        bitmap[position - (position % 4)] = bitmap[position - (position % 4)] ^ mask;
+
+        mask = mask >> 2;
+
+        count++;
+
+        position++;
+        if(position % 4 == 0)
+            i++;
+    }
+
+    nFreeFrames = nFreeFrames + count;
 }
 
 unsigned long ContFramePool::needed_info_frames(unsigned long _n_frames)
 {
     // TODO: IMPLEMENTATION NEEEDED!
-    assert(false);
 }
 
 void set_bitmap(unsigned long start, unsigned long length)
 {
 
-    bitmap[start - (start % 4)] = 0x3F; //set first position of the frame to be occupied and head of sequence (00)
+    //set first position of the frame to be occupied and head of sequence (00)
+    if(start % 4 == 0)
+        bitmap[start - (start % 4)] = bitmap[start - (start % 4)] & 0x7F;
+    else if(start % 4 == 1)
+        bitmap[start - (start % 4)] = bitmap[start - (start % 4)] & 0xFF;
+    else if(start % 4 == 2)
+        bitmap[start - (start % 4)] = bitmap[start - (start % 4)] & 0xF7;
+    else if(start % 4 == 3)
+        bitmap[start - (start % 4)] = bitmap[start - (start % 4)] & 0xFD;
+
+    bitmap[start - (start % 4)] = 0x3F; 
 
     unsigned long index = start + 1;
 
     for(unsigned long i = 0; i < length; i++){
-        //set the following frames in the sequence to be 01, or occurpied but not head of squence. I's using bitwise AND for this
+        //set the following frames in the sequence to be 01, or occurpied but not head of squence. I'm using bitwise AND for this
         if(index % 4 == 0)
-            bitmap[index - (index % 4)] = bitmap[start - (index % 4)] & 0x7F;
+            bitmap[index - (index % 4)] = bitmap[index - (index % 4)] & 0x7F;
         else if(index % 4 == 1)
-            bitmap[start - (index % 4)] = bitmap[start - (index % 4)] & 0xFF;
+            bitmap[index - (index % 4)] = bitmap[index - (index % 4)] & 0xFF;
         else if(index % 4 == 2)
-            bitmap[start - (index % 4)] = bitmap[start - (index % 4)] & 0xF7;
+            bitmap[index - (index % 4)] = bitmap[index - (index % 4)] & 0xF7;
         else if(index % 4 == 3)
-            bitmap[start - (index % 4)] = bitmap[start - (index % 4)] & 0xFD;
+            bitmap[index - (index % 4)] = bitmap[index - (index % 4)] & 0xFD;
 
         index++;
     }
