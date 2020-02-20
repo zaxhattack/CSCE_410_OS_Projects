@@ -127,6 +127,8 @@
 /* METHODS FOR CLASS   C o n t F r a m e P o o l */
 /*--------------------------------------------------------------------------*/
 
+ContFramePool * ContFramePool::pool_list[1000];
+
 ContFramePool::ContFramePool(unsigned long _base_frame_no,
                              unsigned long _n_frames,
                              unsigned long _info_frame_no,
@@ -231,6 +233,7 @@ void ContFramePool::release_frames(unsigned long _first_frame_no)
         }
 
         if(_first_frame_no >= pool_list[i]->base_frame_no && _first_frame_no <= (pool_list[i]->base_frame_no + pool_list[i]->n_frames)){
+            Console::puts("Found the frame pool...\n");
             ptr = pool_list[i];
             break;
         }
@@ -245,10 +248,7 @@ void ContFramePool::release_frames_pvt(unsigned long _first_frame_no){
 
     unsigned long count = 1;
 
-    if((bitmap[bitmap_index] & mask) != 0) {
-        Console::puts("Error, Frame being released is not being used\n");
-        assert(false);
-    }
+    
     //set the first frame to 11
     unsigned char mask = 0xC0 >> ((bitmap_index % 4) * 2);
     
