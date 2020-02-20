@@ -153,6 +153,7 @@ ContFramePool::ContFramePool(unsigned long _base_frame_no,
 
 unsigned long ContFramePool::get_frames(unsigned int _n_frames) //for this I'm using FIRST FIT implementation
 {
+    Console::puts("Allocating...\n");
     assert(nFreeFrames >= _n_frames);
 
     unsigned long position = 0;
@@ -179,10 +180,10 @@ unsigned long ContFramePool::get_frames(unsigned int _n_frames) //for this I'm u
                 i++;
 
             //if we run out reach the end of our frames, we have no more free frames to allocate for this request, and we crash
-            if(position = n_frames){
+            /*if(position = n_frames){
                 Console::puts("Error: No more free holes for allocation\n");
                 assert(false);
-            }
+            }*/
 
             //if we have enough frames in the sequence, break out of this loop
             if(length == _n_frames)
@@ -206,12 +207,14 @@ unsigned long ContFramePool::get_frames(unsigned int _n_frames) //for this I'm u
 void ContFramePool::mark_inaccessible(unsigned long _base_frame_no,
                                       unsigned long _n_frames)
 {
-    // TODO: IMPLEMENTATION NEEEDED!
+    Console::puts("Mark inaccessible...\n");
     assert(false);
 }
 
 void ContFramePool::release_frames(unsigned long _first_frame_no)
 {
+    Console::puts("release frames...\n");
+    /*
     unsigned int bitmap_index = _first_frame_no - base_frame_no;
 
     unsigned long count = 1;
@@ -239,16 +242,18 @@ void ContFramePool::release_frames(unsigned long _first_frame_no)
             i++;
     }
 
-    nFreeFrames = nFreeFrames + count;
+    nFreeFrames = nFreeFrames + count;*/
 }
 
 unsigned long ContFramePool::needed_info_frames(unsigned long _n_frames)
 {
-    // TODO: IMPLEMENTATION NEEEDED!
+    Console::puts("Needed info...\n");
+    return(_n_frames / 16384 + (_n_frames % 16384 > 0 ? 1 : 0));
 }
 
-void set_bitmap(unsigned long start, unsigned long length)
+void ContFramePool::set_bitmap(unsigned long start, unsigned long length)
 {
+    Console::puts("Set Bitmap...\n");
 
     //set first position of the frame to be occupied and head of sequence (00)
     if(start % 4 == 0)
