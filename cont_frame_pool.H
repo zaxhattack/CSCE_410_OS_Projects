@@ -41,22 +41,20 @@
 class ContFramePool {
     
 private:
-    /* -- DEFINE YOUR CONT FRAME POOL DATA STRUCTURE(s) HERE. */
 
+    enum frame_status {free, occ, hos}; //free (11), occupied (00), head of sequence (01)
+
+    unsigned char * bitmap;
     static ContFramePool * pool_list[1000];
+    unsigned long free_frame_number;
+    unsigned long base_frame_number;
+    unsigned long number_of_frames;
+    unsigned long info_frame_number
+    unsigned long number_of_info_frames;
 
-    unsigned char * bitmap;         //bitmap of the frames
-    unsigned long base_frame_no;    //the start of the frames in memory
-    unsigned long nFreeFrames;      //The number of free frames available
-    unsigned long n_frames;         //frame pool size
-    unsigned long info_frame_no;    //the frame where info is stored
-    unsigned long n_info_frames;    //the number of frames needed for management
+    unsigned long get_bitmap_index(unsigned long frame_number); //returns the index in the bitmap associated with this frame number
 
-    void set_bitmap(unsigned long start, unsigned long length);
-    //simple function to manipulate the bitmap based on the length of the frame sequence and the first position of the frame sequence
-
-    void release_frames_pvt(unsigned long _first_frame_no);
-    
+    frame_status check_bitmap_index(unsigned long bitmap_index) //checks the if the bitmap index in question is free, occ, or hos
 public:
 
     // The frame size is the same as the page size, duh...    
@@ -129,6 +127,5 @@ public:
      Other implementations need a different number of info frames.
      The exact number is computed in this function..
      */
-
 };
 #endif

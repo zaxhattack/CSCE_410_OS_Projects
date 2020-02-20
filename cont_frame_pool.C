@@ -129,12 +129,17 @@
 
 ContFramePool * ContFramePool::pool_list[1000];
 
+//------------------------------------------------------------------------------------------------------
+
 ContFramePool::ContFramePool(unsigned long _base_frame_no,
                              unsigned long _n_frames,
                              unsigned long _info_frame_no,
                              unsigned long _n_info_frames)
 {
-    assert(_n_frames <= FRAME_SIZE * 8); //ensure the number of frames doesn't exceed what's available
+    base_frame_number = _base_frame_no;
+    number_of_frames = _n_frames;
+    info_frame_number = info_frame_no;
+    number_of_info_frames = _n_info_frames;
 
     for(int i = 0; i < 10000; ++i){
         if(pool_list[i] == NULL){
@@ -143,171 +148,111 @@ ContFramePool::ContFramePool(unsigned long _base_frame_no,
         }
     }
 
-    //set variables
-    base_frame_no = _base_frame_no;
-    n_frames = _n_frames;
-    nFreeFrames = _n_frames;
-    info_frame_no = _info_frame_no;
-    n_info_frames = _n_info_frames;
-
-    if(info_frame_no == 0)
+    if(info_frame_no == 0) {
         bitmap = (unsigned char *) (base_frame_no * FRAME_SIZE);
-    else
+    } else {
         bitmap = (unsigned char *) (info_frame_no * FRAME_SIZE);
-
-    set_bitmap(info_frame_no, n_info_frames); //set the info frames
-
-    Console::puts("Frame Pool initialized\n");
-}
-
-unsigned long ContFramePool::get_frames(unsigned int _n_frames) //for this I'm using FIRST FIT implementation
-{
-    Console::puts("Allocating...\n");
-    assert(nFreeFrames >= _n_frames);
-
-    unsigned long position = 0;
-    unsigned long frame_start = 0;
-    unsigned long i = 0;
-    unsigned long length = 0;
-
-    unsigned char mask = 0xC0;
-    while(1){
-        //The first while loop looks for a bitmap entry of 11, indicating a free frame
-        while ((mask & bitmap[i]) != 0xC0 && (mask & bitmap[i]) != 0x30 && (mask & bitmap[i]) != 0xC && (mask & bitmap[i]) != 0x03) {
-            mask = mask >> 2;
-            position++;
-            if(position % 4 == 0)
-                i++;
-        }
-        //once a free frame is found, record this as the start position of the sequence and count how many frames are free afterwards
-        frame_start = position;
-        while ((mask & bitmap[i]) == 0xC0 || (mask & bitmap[i]) == 0x30 || (mask & bitmap[i]) == 0xC || (mask & bitmap[i]) == 0x03) {
-            mask = mask >> 2;
-            position++;
-            length++;
-            if(position % 4 == 0)
-                i++;
-
-            //if we run out reach the end of our frames, we have no more free frames to allocate for this request, and we crash
-            /*if(position = n_frames){
-                Console::puts("Error: No more free holes for allocation\n");
-                assert(false);
-            }*/
-
-            //if we have enough frames in the sequence, break out of this loop
-            if(length == _n_frames)
-                break;
-        }
-
-        ///if we have enough frames in the sequence, break out of this loop as well and record how many free frames we have left total
-        if(length = _n_frames){
-            nFreeFrames = nFreeFrames - _n_frames;
-            break;
-        }
     }
-    
-    //if we got out of the loop above successfully, we have a frame number recorded for us to use as the start of the sequence. 
-    //Send it and the length of the sequence to the set_bitmap function, and return the position of the frame sequence
-    set_bitmap(frame_start, _n_frames); //Reserve the frames on the bitmap
 
-    return(frame_start + base_frame_no);
+
+
+    assert(false);
 }
+
+//------------------------------------------------------------------------------------------------------
+
+unsigned long ContFramePool::get_frames(unsigned int _n_frames)
+{
+    // TODO: IMPLEMENTATION NEEEDED!
+    assert(false);
+}
+
+//------------------------------------------------------------------------------------------------------
 
 void ContFramePool::mark_inaccessible(unsigned long _base_frame_no,
                                       unsigned long _n_frames)
 {
-    Console::puts("Mark inaccessible...\n");
+    
     assert(false);
 }
 
+//------------------------------------------------------------------------------------------------------
+
 void ContFramePool::release_frames(unsigned long _first_frame_no)
 {
-    Console::puts("release frames...\n");
-
-    ContFramePool * ptr;
-
-    for(int i = 0; i < 10000; ++i){
-        if(pool_list[i] == NULL){
-            Console::puts("Error: ran to end of pool_list\n");
-            assert(false);
-        }
-
-        if(_first_frame_no >= pool_list[i]->base_frame_no && _first_frame_no <= (pool_list[i]->base_frame_no + pool_list[i]->n_frames)){
-            Console::puts("Found the frame pool...\n");
-            ptr = pool_list[i];
-            break;
-        }
-    }
-
-    ptr->release_frames_pvt(_first_frame_no);
+    // TODO: IMPLEMENTATION NEEEDED!
+    assert(false);
 }
 
-void ContFramePool::release_frames_pvt(unsigned long _first_frame_no){
-    
-    unsigned int bitmap_index = _first_frame_no - base_frame_no;
-
-    unsigned long count = 1;
-
-    
-    //set the first frame to 11
-    unsigned char mask = 0xC0 >> ((bitmap_index % 4) * 2);
-    
-    //keep going, setting each 01 to 11, until we got to either a 11 or a 00, indication we have traversed the entire sequence
-    unsigned long position = bitmap_index % 4;
-    unsigned long i = bitmap_index - position;
-    while ((mask & bitmap[i]) == 0x40 || (mask & bitmap[i]) == 0x10 || (mask & bitmap[i]) == 0x04 || (mask & bitmap[i]) == 0x01) {
-
-        bitmap[position - (position % 4)] = bitmap[position - (position % 4)] ^ mask;
-
-        mask = mask >> 2;
-
-        count++;
-
-        position++;
-        if(position % 4 == 0)
-            i++;
-    }
-
-    nFreeFrames = nFreeFrames + count;
-}
+//------------------------------------------------------------------------------------------------------
 
 unsigned long ContFramePool::needed_info_frames(unsigned long _n_frames)
 {
-    Console::puts("Needed info...\n");
-    return(_n_frames / 16384 + (_n_frames % 16384 > 0 ? 1 : 0));
+    // TODO: IMPLEMENTATION NEEEDED!
+    assert(false);
 }
 
-void ContFramePool::set_bitmap(unsigned long start, unsigned long length)
-{
-    Console::puts("Set Bitmap...\n");
+//------------------------------------------------------------------------------------------------------
 
-    //set first position of the frame to be occupied and head of sequence (00)
-    if(start % 4 == 0)
-        bitmap[start - (start % 4)] = bitmap[start - (start % 4)] & 0x7F;
-    else if(start % 4 == 1)
-        bitmap[start - (start % 4)] = bitmap[start - (start % 4)] & 0xFF;
-    else if(start % 4 == 2)
-        bitmap[start - (start % 4)] = bitmap[start - (start % 4)] & 0xF7;
-    else if(start % 4 == 3)
-        bitmap[start - (start % 4)] = bitmap[start - (start % 4)] & 0xFD;
+unsigned long ContFramePool::get_bitmap_index(unsigned long frame_number){
+    return(frame_number - base_frame_no);
+}
 
-    bitmap[start - (start % 4)] = 0x3F; 
+//------------------------------------------------------------------------------------------------------
 
-    unsigned long index = start + 1;
-
-    for(unsigned long i = 0; i < length; i++){
-        //set the following frames in the sequence to be 01, or occurpied but not head of squence. I'm using bitwise AND for this
-        if(index % 4 == 0)
-            bitmap[index - (index % 4)] = bitmap[index - (index % 4)] & 0x7F;
-        else if(index % 4 == 1)
-            bitmap[index - (index % 4)] = bitmap[index - (index % 4)] & 0xFF;
-        else if(index % 4 == 2)
-            bitmap[index - (index % 4)] = bitmap[index - (index % 4)] & 0xF7;
-        else if(index % 4 == 3)
-            bitmap[index - (index % 4)] = bitmap[index - (index % 4)] & 0xFD;
-
-        index++;
+frame_status ContFramePool::check_bitmap_index(unsigned long bitmap_index){
+    if(bitmap_index % 4 == 0){
+        if(bitmap[bitmap_index] & 0xC0 == 0xC0)
+            return free;
+        else if(bitmap[bitmap_index] & 0xC0 == 0x40)
+            return hos;
+        else if(bitmap[bitmap_index] & 0xC0 == 0x0)
+            return occ;
+    }else if(bitmap_index % 4 == 1){
+        if(bitmap[bitmap_index] & 0x30 == 0x30)
+            return free;
+        else if(bitmap[bitmap_index] & 0x30 == 0x10)
+            return hos;
+        else if(bitmap[bitmap_index] & 0x30 == 0x0)
+            return occ;
+    }else if(bitmap_index % 4 == 2){
+        if(bitmap[bitmap_index] & 0xC == 0xC)
+            return free;
+        else if(bitmap[bitmap_index] & 0xC == 0x4)
+            return hos;
+        else if(bitmap[bitmap_index] & 0xC == 0x0)
+            return occ;
+    }else if(bitmap_index % 4 == 3){
+        if(bitmap[bitmap_index] & 0x3 == 0x3)
+            return free;
+        else if(bitmap[bitmap_index] & 0x3 == 0x1)
+            return hos;
+        else if(bitmap[bitmap_index] & 0x3 == 0x0)
+            return occ;
+    }else{
+        assert(false);
     }
+    return free; //keep compiler happy
+}
 
-    nFreeFrames = nFreeFrames - length;
+//------------------------------------------------------------------------------------------------------
+
+void ContFramePool::mark_bitmap_index(unsigned long bitmap_index, frame_status status){
+    unsigned char mask;
+
+    if(frame_status == free)
+        mask = 0xC0;
+    else if (frame_status == occ)
+        mask = 0x0;
+    else if (frame_status == hos)
+        mask = 0x40;
+
+    mask = mask >> ((bitmap_index % 4) * 2);
+
+    unsigned char index_alone = bitmap[bitmap_index] & (0xC0 >> ((bitmap_index % 4) * 2));
+
+    if(mask > index_alone)
+        bitmap[bitmap_index] = bitmap[bitmap_index] + (mask - index_alone);
+    else 
+        bitmap[bitmap_index] = bitmap[bitmap_index] - (index_alone - mask);
 }
