@@ -109,7 +109,6 @@
 /* DATA STRUCTURES */
 /*--------------------------------------------------------------------------*/
 
-/* -- (none) -- */
 
 /*--------------------------------------------------------------------------*/
 /* CONSTANTS */
@@ -138,33 +137,92 @@ ContFramePool::ContFramePool(unsigned long _base_frame_no,
 {
     base_frame_number = _base_frame_no;
     number_of_frames = _n_frames;
-    info_frame_number = info_frame_no;
+    info_frame_number = _info_frame_no;
     number_of_info_frames = _n_info_frames;
 
-    for(int i = 0; i < 10000; ++i){
+    for(int i = 0; i < 100000; ++i){
         if(pool_list[i] == NULL){
             pool_list[i] = this;
             break;
         }
     }
 
-    if(info_frame_no == 0) {
-        bitmap = (unsigned char *) (base_frame_no * FRAME_SIZE);
+    if(info_frame_number == 0) {
+        bitmap = (unsigned char *) (base_frame_number * FRAME_SIZE);
     } else {
-        bitmap = (unsigned char *) (info_frame_no * FRAME_SIZE);
+        bitmap = (unsigned char *) (info_frame_number * FRAME_SIZE);
     }
 
-
-
-    assert(false);
+    for (int i = 0; i < (number_of_frames / 4); ++i){
+        bitmap[i] = 0xFF;
+    }
 }
 
 //------------------------------------------------------------------------------------------------------
 
 unsigned long ContFramePool::get_frames(unsigned int _n_frames)
 {
-    // TODO: IMPLEMENTATION NEEEDED!
-    assert(false);
+    unsigned long count = 0;
+    unsigned long iterate = 20;
+    unsigned int start = 0;
+
+    Console::puts("-----------------------------\n");
+
+    while(1){
+        Console::puts("Checking bitmap entry for ");
+        Console::puti(_n_frames);
+        Console::puts(" free frames... Index = ");
+        Console::puti(iterate);
+        Console::puts("...\n");
+        if(check_bitmap_index(iterate) == free){
+            Console::puts("Found a free one!! Counting...");
+            start = iterate;
+            while(1){
+                if(check_bitmap_index(iterate) == free){
+                    count++;
+                }else{
+                    break;
+                    count = 0;
+                }
+                if(count == _n_frames){
+                    Console::puts("Found enough! We looked for ");
+                    Console::puti(_n_frames);
+                    Console::puts(" and found ");
+                    Console::puti(count);
+                    Console::puts("\n          at bitmap index ");
+                    Console::puti(start);
+                    Console::puts(". The bitmap: ");
+                    Console::puti(bitmap[start - (start % 4)]);
+                    Console::puts("\n");                    
+                    break;
+                }
+                iterate++;
+            }
+        }
+
+        if(count == _n_frames){
+            break;
+        }
+
+    iterate++;
+
+    }
+
+    Console::puts("Reserving the header....");
+    mark_bitmap_index(start, hos);
+
+    start++;
+
+    for (int i = 0; i < _n_frames - 1; ++i){
+        Console::puts("Reserving subsequent frame at index ");
+        Console::puti(start);
+        mark_bitmap_index(start, occ);
+        Console::puts("\nThe bitmap here is now: ");                    
+        Console::puti(bitmap[start - (start % 4)]);
+        Console::puts("\n");
+        start++;
+    }
+
 }
 
 //------------------------------------------------------------------------------------------------------
@@ -195,39 +253,39 @@ unsigned long ContFramePool::needed_info_frames(unsigned long _n_frames)
 //------------------------------------------------------------------------------------------------------
 
 unsigned long ContFramePool::get_bitmap_index(unsigned long frame_number){
-    return(frame_number - base_frame_no);
+    return(frame_number - base_frame_number);
 }
 
 //------------------------------------------------------------------------------------------------------
 
-frame_status ContFramePool::check_bitmap_index(unsigned long bitmap_index){
+ContFramePool::frame_status ContFramePool::check_bitmap_index(unsigned long bitmap_index){
     if(bitmap_index % 4 == 0){
-        if(bitmap[bitmap_index] & 0xC0 == 0xC0)
+        if((bitmap[bitmap_index - (bitmap_index % 4)] & 0xC0) == 0xC0)
             return free;
-        else if(bitmap[bitmap_index] & 0xC0 == 0x40)
+        else if((bitmap[bitmap_index - (bitmap_index % 4)] & 0xC0) == 0x40)
             return hos;
-        else if(bitmap[bitmap_index] & 0xC0 == 0x0)
+        else if((bitmap[bitmap_index - (bitmap_index % 4)] & 0xC0) == 0x0)
             return occ;
     }else if(bitmap_index % 4 == 1){
-        if(bitmap[bitmap_index] & 0x30 == 0x30)
+        if((bitmap[bitmap_index - (bitmap_index % 4)] & 0x30) == 0x30)
             return free;
-        else if(bitmap[bitmap_index] & 0x30 == 0x10)
+        else if((bitmap[bitmap_index - (bitmap_index % 4)] & 0x30) == 0x10)
             return hos;
-        else if(bitmap[bitmap_index] & 0x30 == 0x0)
+        else if((bitmap[bitmap_index - (bitmap_index % 4)] & 0x30) == 0x0)
             return occ;
     }else if(bitmap_index % 4 == 2){
-        if(bitmap[bitmap_index] & 0xC == 0xC)
+        if((bitmap[bitmap_index - (bitmap_index % 4)] & 0xC) == 0xC)
             return free;
-        else if(bitmap[bitmap_index] & 0xC == 0x4)
+        else if((bitmap[bitmap_index - (bitmap_index % 4)] & 0xC) == 0x4)
             return hos;
-        else if(bitmap[bitmap_index] & 0xC == 0x0)
+        else if((bitmap[bitmap_index - (bitmap_index % 4)] & 0xC) == 0x0)
             return occ;
     }else if(bitmap_index % 4 == 3){
-        if(bitmap[bitmap_index] & 0x3 == 0x3)
+        if((bitmap[bitmap_index - (bitmap_index % 4)] & 0x3) == 0x3)
             return free;
-        else if(bitmap[bitmap_index] & 0x3 == 0x1)
+        else if((bitmap[bitmap_index - (bitmap_index % 4)] & 0x3) == 0x1)
             return hos;
-        else if(bitmap[bitmap_index] & 0x3 == 0x0)
+        else if((bitmap[bitmap_index - (bitmap_index % 4)] & 0x3) == 0x0)
             return occ;
     }else{
         assert(false);
@@ -240,19 +298,37 @@ frame_status ContFramePool::check_bitmap_index(unsigned long bitmap_index){
 void ContFramePool::mark_bitmap_index(unsigned long bitmap_index, frame_status status){
     unsigned char mask;
 
-    if(frame_status == free)
+    if(status == free)
         mask = 0xC0;
-    else if (frame_status == occ)
+    else if (status == occ)
         mask = 0x0;
-    else if (frame_status == hos)
+    else if (status == hos)
         mask = 0x40;
 
     mask = mask >> ((bitmap_index % 4) * 2);
 
-    unsigned char index_alone = bitmap[bitmap_index] & (0xC0 >> ((bitmap_index % 4) * 2));
+    unsigned char index_alone = bitmap[bitmap_index - (bitmap_index % 4)] & (0xC0 >> ((bitmap_index % 4) * 2));
 
-    if(mask > index_alone)
-        bitmap[bitmap_index] = bitmap[bitmap_index] + (mask - index_alone);
-    else 
-        bitmap[bitmap_index] = bitmap[bitmap_index] - (index_alone - mask);
+    if(mask > index_alone){
+        Console::puts("\nMarking bitmap position ");
+        Console::puti(bitmap_index);
+        Console::puts(" with this ");
+        Console::puti(mask);
+        Console::puts("\n");
+        bitmap[bitmap_index - (bitmap_index % 4)] = bitmap[bitmap_index - (bitmap_index % 4)] + (mask - index_alone);
+        Console::puts("It is now this ");
+        Console::puti(bitmap[bitmap_index - (bitmap_index % 4)]);
+        Console::puts("\n");
+    }
+    else {
+        Console::puts("\nMarking bitmap position ");
+        Console::puti(bitmap_index);
+        Console::puts(" with this ");
+        Console::puti(mask);
+        Console::puts("\n");
+        bitmap[bitmap_index - (bitmap_index % 4)] = bitmap[bitmap_index - (bitmap_index % 4)] - (index_alone - mask);
+        Console::puts("It is now this ");
+        Console::puti(bitmap[bitmap_index - (bitmap_index % 4)]);
+        Console::puts("\n");
+    }
 }
