@@ -127,6 +127,7 @@
 /*--------------------------------------------------------------------------*/
 
 ContFramePool * ContFramePool::pool_list[1000];
+int ContFramePool::number_of_pools = 0;
 
 //------------------------------------------------------------------------------------------------------
 
@@ -139,6 +140,7 @@ ContFramePool::ContFramePool(unsigned long _base_frame_no,
     number_of_frames = _n_frames;
     info_frame_number = _info_frame_no;
     number_of_info_frames = _n_info_frames;
+    free_frame_number = _n_frames;
 
     for(int i = 0; i < 100000; ++i){
         if(pool_list[i] == NULL){
@@ -146,6 +148,8 @@ ContFramePool::ContFramePool(unsigned long _base_frame_no,
             break;
         }
     }
+
+    pool_list[number_of_pools] = this;
 
     if(info_frame_number == 0) {
         bitmap = (unsigned char *) (base_frame_number * FRAME_SIZE);
@@ -162,6 +166,9 @@ ContFramePool::ContFramePool(unsigned long _base_frame_no,
 
 unsigned long ContFramePool::get_frames(unsigned int _n_frames)
 {
+
+    assert(_n_frames <= free_frame_number);
+
     unsigned long count = 0;
     unsigned long iterate = 20;
     unsigned int start = 0;
@@ -223,6 +230,8 @@ unsigned long ContFramePool::get_frames(unsigned int _n_frames)
         start++;
     }
 
+    free_frame_number = free_frame_number - _n_frames;
+
 }
 
 //------------------------------------------------------------------------------------------------------
@@ -238,8 +247,44 @@ void ContFramePool::mark_inaccessible(unsigned long _base_frame_no,
 
 void ContFramePool::release_frames(unsigned long _first_frame_no)
 {
-    // TODO: IMPLEMENTATION NEEEDED!
-    assert(false);
+    Console::puts("release frames...\n");
+
+    ContFramePool * ptr;
+
+    for(int i = 0; i < 10000; ++i){
+        if(pool_list[i] == NULL){
+            Console::puts("Error: ran to end of pool_list\n");
+            assert(false);
+        }
+
+        if(_first_frame_no >= pool_list[i]->base_frame_number && _first_frame_no <= (pool_list[i]->base_frame_number + pool_list[i]->number_of_frames)){
+            Console::puts("Found the frame pool...\n");
+            ptr = pool_list[i];
+            break;
+        }
+    }
+
+    ptr->release_frames_pvt(_first_frame_no);
+}
+
+//------------------------------------------------------------------------------------------------------
+
+void ContFramePool::release_frames_pvt(unsigned long first_frame){
+    unsigned long count = 1;
+
+    unsigned int bitmap_index = get_bitmap_index(first_frame);
+
+    mark_bitmap_index(bitmap_index, free);
+
+    bitmap_index++;
+
+    while(check_bitmap_index(bitmap_index) == occ){
+        mark_bitmap_index(bitmap_index, free);
+        count++;
+        bitmap_index++;
+    }
+
+    free_frame_number = free_frame_number + count;
 }
 
 //------------------------------------------------------------------------------------------------------
