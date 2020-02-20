@@ -57,6 +57,9 @@ private:
     frame_status check_bitmap_index(unsigned long bitmap_index); //checks the if the bitmap index in question is free, occ, or hos
 
     void mark_bitmap_index(unsigned long bitmap_index, frame_status status);
+
+    void release_frames_pvt(unsigned long first_frame);
+
 public:
 
     // The frame size is the same as the page size, duh...    

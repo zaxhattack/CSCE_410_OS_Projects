@@ -127,7 +127,6 @@
 /*--------------------------------------------------------------------------*/
 
 ContFramePool * ContFramePool::pool_list[1000];
-int ContFramePool::number_of_pools = 0;
 
 //------------------------------------------------------------------------------------------------------
 
@@ -149,8 +148,6 @@ ContFramePool::ContFramePool(unsigned long _base_frame_no,
         }
     }
 
-    pool_list[number_of_pools] = this;
-
     if(info_frame_number == 0) {
         bitmap = (unsigned char *) (base_frame_number * FRAME_SIZE);
     } else {
@@ -170,7 +167,7 @@ unsigned long ContFramePool::get_frames(unsigned int _n_frames)
     assert(_n_frames <= free_frame_number);
 
     unsigned long count = 0;
-    unsigned long iterate = 20;
+    unsigned long iterate = 0;
     unsigned int start = 0;
 
     Console::puts("-----------------------------\n");
@@ -247,6 +244,8 @@ void ContFramePool::mark_inaccessible(unsigned long _base_frame_no,
 
 void ContFramePool::release_frames(unsigned long _first_frame_no)
 {
+
+    assert(false);
     Console::puts("release frames...\n");
 
     ContFramePool * ptr;
