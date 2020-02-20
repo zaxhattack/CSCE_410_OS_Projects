@@ -134,6 +134,13 @@ ContFramePool::ContFramePool(unsigned long _base_frame_no,
 {
     assert(_n_frames <= FRAME_SIZE * 8); //ensure the number of frames doesn't exceed what's available
 
+    for(int i = 0; i < 10000; ++i){
+        if(pool_list[i] == NULL){
+            pool_list[i] = this;
+            break;
+        }
+    }
+
     //set variables
     base_frame_no = _base_frame_no;
     n_frames = _n_frames;
@@ -214,7 +221,26 @@ void ContFramePool::mark_inaccessible(unsigned long _base_frame_no,
 void ContFramePool::release_frames(unsigned long _first_frame_no)
 {
     Console::puts("release frames...\n");
-    /*
+
+    ContFramePool * ptr;
+
+    for(int i = 0; i < 10000; ++i){
+        if(pool_list[i] == NULL){
+            Console::puts("Error: ran to end of pool_list\n");
+            assert(false);
+        }
+
+        if(_first_frame_no >= pool_list[i]->base_frame_no && _first_frame_no <= (pool_list[i]->base_frame_no + pool_list[i]->n_frames)){
+            ptr = pool_list[i];
+            break;
+        }
+    }
+
+    ptr->release_frames_pvt(_first_frame_no);
+}
+
+void ContFramePool::release_frames_pvt(unsigned long _first_frame_no){
+    
     unsigned int bitmap_index = _first_frame_no - base_frame_no;
 
     unsigned long count = 1;
@@ -242,7 +268,7 @@ void ContFramePool::release_frames(unsigned long _first_frame_no)
             i++;
     }
 
-    nFreeFrames = nFreeFrames + count;*/
+    nFreeFrames = nFreeFrames + count;
 }
 
 unsigned long ContFramePool::needed_info_frames(unsigned long _n_frames)

@@ -43,6 +43,8 @@ class ContFramePool {
 private:
     /* -- DEFINE YOUR CONT FRAME POOL DATA STRUCTURE(s) HERE. */
 
+    static ContFramePool * pool_list[10000];
+
     unsigned char * bitmap;         //bitmap of the frames
     unsigned long base_frame_no;    //the start of the frames in memory
     unsigned long nFreeFrames;      //The number of free frames available
@@ -52,6 +54,8 @@ private:
 
     void set_bitmap(unsigned long start, unsigned long length);
     //simple function to manipulate the bitmap based on the length of the frame sequence and the first position of the frame sequence
+
+    void release_frames_pvt(unsigned long _first_frame_no);
     
 public:
 
