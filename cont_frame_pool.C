@@ -200,14 +200,18 @@ unsigned long ContFramePool::get_frames(unsigned int _n_frames)
     }
     mark_bitmap_index(start, hos); //set the header
 
-    start++;
+    iterate = start;
+
+    iterate++;
 
     for (int i = 0; i < _n_frames - 1; ++i){ //now set subsequent frames as occupied
-        mark_bitmap_index(start, occ);
-        start++;
+        mark_bitmap_index(iterate, occ);
+        iterate++;
     }
 
     free_frame_number = free_frame_number - _n_frames; //update the free frame number
+
+    return start + base_frame_number;
 
 }
 
