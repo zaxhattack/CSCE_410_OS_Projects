@@ -166,6 +166,8 @@ ContFramePool::ContFramePool(unsigned long _base_frame_no,
         bitmap = (unsigned char *) (info_frame_number * FRAME_SIZE);
     }
 
+    mark_bitmap_index(info_frame_number, occ);
+
     //initialize all frames as free
     for (int i = 0; i < (number_of_frames / 4); ++i){
         bitmap[i] = 0xFF;
@@ -176,6 +178,10 @@ ContFramePool::ContFramePool(unsigned long _base_frame_no,
 
 unsigned long ContFramePool::get_frames(unsigned int _n_frames)
 {
+
+    /*for (long i = 0; i < 10000000; ++i){
+       
+    }   */ 
     //local variables to be used:
     unsigned long count = 0; //keeps track of how long the hole is
     unsigned long iterate = 0; //keeps track of what bitmap index we're on

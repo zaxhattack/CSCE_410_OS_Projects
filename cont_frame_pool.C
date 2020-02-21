@@ -157,6 +157,8 @@ ContFramePool::ContFramePool(unsigned long _base_frame_no,
         bitmap = (unsigned char *) (info_frame_number * FRAME_SIZE);
     }
 
+    mark_bitmap_index(info_frame_number, occ);
+
     //initialize all frames as free
     for (int i = 0; i < (number_of_frames / 4); ++i){
         bitmap[i] = 0xFF;
