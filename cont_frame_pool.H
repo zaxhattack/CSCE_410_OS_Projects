@@ -44,8 +44,8 @@ private:
 
     typedef enum frame_status {free, occ, hos} frame_status; //free (11), occupied (00), head of sequence (01)
 
+    //variables
     unsigned char * bitmap;
-    static ContFramePool * pool_list[1000];
     unsigned long free_frame_number;
     unsigned long base_frame_number;
     unsigned long number_of_frames;
@@ -56,9 +56,9 @@ private:
 
     frame_status check_bitmap_index(unsigned long bitmap_index); //checks the if the bitmap index in question is free, occ, or hos
 
-    void mark_bitmap_index(unsigned long bitmap_index, frame_status status);
+    void mark_bitmap_index(unsigned long bitmap_index, frame_status status); //sets the bitmap index given to the desired state: free, occupied, or head of sequence
 
-    void release_frames_pvt(unsigned long first_frame);
+    void release_frames_pvt(unsigned long first_frame); //sets a frame sequence starting ar first_frame as free
 
 public:
 

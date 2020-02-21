@@ -126,7 +126,7 @@
 /* METHODS FOR CLASS   C o n t F r a m e P o o l */
 /*--------------------------------------------------------------------------*/
 
-ContFramePool * ContFramePool::pool_list[1000];
+ContFramePool * pool_list[1000]; //the list of frame pools
 
 //------------------------------------------------------------------------------------------------------
 
@@ -135,25 +135,38 @@ ContFramePool::ContFramePool(unsigned long _base_frame_no,
                              unsigned long _info_frame_no,
                              unsigned long _n_info_frames)
 {
+    //set variables:
     base_frame_number = _base_frame_no;
     number_of_frames = _n_frames;
     info_frame_number = _info_frame_no;
     number_of_info_frames = _n_info_frames;
-    free_frame_number = _n_frames;
-
-    for(int i = 0; i < 100000; ++i){
+    
+    //add this frame pool to the list of frame pools
+    for(int i = 0; i < 10000; i++){
         if(pool_list[i] == NULL){
+            Console::puts("Assigning this pool as pos ");
+            Console::puti(i);
+            Console::puts("\n");
             pool_list[i] = this;
+            Console::puts("This pool list is: ");
+            Console::puti((int)pool_list[i]);
+            Console::puts("\n");
+            Console::puts("Data from pool list... base num = : ");
+            Console::puti(pool_list[i]->base_frame_number);
+            Console::puts("\n");
             break;
         }
     }
 
+    
+    //set the info frames, just like in simple frame manager
     if(info_frame_number == 0) {
         bitmap = (unsigned char *) (base_frame_number * FRAME_SIZE);
     } else {
         bitmap = (unsigned char *) (info_frame_number * FRAME_SIZE);
     }
 
+    //initialize all frames as free
     for (int i = 0; i < (number_of_frames / 4); ++i){
         bitmap[i] = 0xFF;
     }
@@ -163,32 +176,32 @@ ContFramePool::ContFramePool(unsigned long _base_frame_no,
 
 unsigned long ContFramePool::get_frames(unsigned int _n_frames)
 {
-
-    assert(_n_frames <= free_frame_number);
-
-    unsigned long count = 0;
-    unsigned long iterate = 0;
-    unsigned int start = 0;
+    //local variables to be used:
+    unsigned long count = 0; //keeps track of how long the hole is
+    unsigned long iterate = 0; //keeps track of what bitmap index we're on
+    unsigned int start = 0; //keeps track of the start of the hole we find
 
     Console::puts("-----------------------------\n");
 
+    //run until break
     while(1){
         Console::puts("Checking bitmap entry for ");
         Console::puti(_n_frames);
         Console::puts(" free frames... Index = ");
         Console::puti(iterate);
         Console::puts("...\n");
+        //first, check the bitmap index we're on to see if it's free
         if(check_bitmap_index(iterate) == free){
             Console::puts("Found a free one!! Counting...");
-            start = iterate;
-            while(1){
+            start = iterate; //if it's free, set the start point for the hole here
+            while(1){ //now, check to see how long the hole is
                 if(check_bitmap_index(iterate) == free){
-                    count++;
+                    count++; //keep track of the length
                 }else{
-                    break;
+                    break; //if the hole runs to the end before we determine it's big enough, break
                     count = 0;
                 }
-                if(count == _n_frames){
+                if(count == _n_frames){ //if the hole is big enough, break
                     Console::puts("Found enough! We looked for ");
                     Console::puti(_n_frames);
                     Console::puts(" and found ");
@@ -204,7 +217,7 @@ unsigned long ContFramePool::get_frames(unsigned int _n_frames)
             }
         }
 
-        if(count == _n_frames){
+        if(count == _n_frames){ //if the hole is big enough, break out of the original loop
             break;
         }
 
@@ -213,11 +226,11 @@ unsigned long ContFramePool::get_frames(unsigned int _n_frames)
     }
 
     Console::puts("Reserving the header....");
-    mark_bitmap_index(start, hos);
+    mark_bitmap_index(start, hos); //set the header
 
     start++;
 
-    for (int i = 0; i < _n_frames - 1; ++i){
+    for (int i = 0; i < _n_frames - 1; ++i){ //now set subsequent frames as occupied
         Console::puts("Reserving subsequent frame at index ");
         Console::puti(start);
         mark_bitmap_index(start, occ);
@@ -227,7 +240,7 @@ unsigned long ContFramePool::get_frames(unsigned int _n_frames)
         start++;
     }
 
-    free_frame_number = free_frame_number - _n_frames;
+    free_frame_number = free_frame_number - _n_frames; //update the free frame number
 
 }
 
@@ -236,73 +249,87 @@ unsigned long ContFramePool::get_frames(unsigned int _n_frames)
 void ContFramePool::mark_inaccessible(unsigned long _base_frame_no,
                                       unsigned long _n_frames)
 {
-    
-    assert(false);
+    for (int i = _base_frame_no; i < _n_frames; ++i){ //simply use our function to set the range as occupied so nothing writes over it
+        mark_bitmap_index(get_bitmap_index(_base_frame_no), occ);
+    }
 }
 
 //------------------------------------------------------------------------------------------------------
 
 void ContFramePool::release_frames(unsigned long _first_frame_no)
 {
+    Console::puts("----------------------------------------------------release frames...\n");
 
-    assert(false);
-    Console::puts("release frames...\n");
-
-    ContFramePool * ptr;
-
+    Console::puts("Looking for frame num ");
+    Console::puti(_first_frame_no);
+    Console::puts("\n");
+    //iterate the list of pools to find the one containing the frame in question
     for(int i = 0; i < 10000; ++i){
         if(pool_list[i] == NULL){
-            Console::puts("Error: ran to end of pool_list\n");
+
+            Console::puts("This pool list is: ");
+            Console::puti((int)pool_list[i]);
+            Console::puts("\n");
+
+            Console::puts("Error: ran to end of pool_list\n"); //if we can't find it, something went wrong
             assert(false);
         }
 
-        if(_first_frame_no >= pool_list[i]->base_frame_number && _first_frame_no <= (pool_list[i]->base_frame_number + pool_list[i]->number_of_frames)){
+        Console::puts("Data from pool list... base num = ");
+        Console::puti((int)pool_list[i]->base_frame_number);
+        Console::puts("\n");
+        
+        if(_first_frame_no >= pool_list[i]->base_frame_number && _first_frame_no <= (pool_list[i]->base_frame_number + pool_list[i]->number_of_frames)){ //check each frame pool for the frame
             Console::puts("Found the frame pool...\n");
-            ptr = pool_list[i];
+            pool_list[i]->release_frames_pvt(_first_frame_no); //if we find it, call that frame pool's release function to release the frame block and break
             break;
         }
     }
-
-    ptr->release_frames_pvt(_first_frame_no);
 }
 
 //------------------------------------------------------------------------------------------------------
 
 void ContFramePool::release_frames_pvt(unsigned long first_frame){
-    unsigned long count = 1;
+    
+    //local variables:
+    unsigned long count = 1; //keep track of how many frames we're freeing
+    unsigned long bitmap_index = get_bitmap_index(first_frame); //find out the bitmao index of the head of sequence frame
 
-    unsigned int bitmap_index = get_bitmap_index(first_frame);
+    Console::puts("!!! BITMAP INDEX");
+    Console::puti(bitmap_index);
+    Console::puts("\n");
 
-    mark_bitmap_index(bitmap_index, free);
+    mark_bitmap_index(bitmap_index, free); //mark the head of sequence frame as free
 
-    bitmap_index++;
+   bitmap_index++;
 
-    while(check_bitmap_index(bitmap_index) == occ){
+    while(check_bitmap_index(bitmap_index) == occ){ //keep setting the occied frames following as free until we get to another head of sequence or a free frame
         mark_bitmap_index(bitmap_index, free);
         count++;
         bitmap_index++;
     }
 
-    free_frame_number = free_frame_number + count;
+    free_frame_number = free_frame_number + count; //update the free frame count
 }
 
 //------------------------------------------------------------------------------------------------------
 
 unsigned long ContFramePool::needed_info_frames(unsigned long _n_frames)
 {
-    // TODO: IMPLEMENTATION NEEEDED!
-    assert(false);
+    Console::puts("Needed info...\n");
+    return(_n_frames / 16384 + (_n_frames % 16384 > 0 ? 1 : 0)); //speaks for itself. Computes the number of frames needed for info for this frame pool
 }
 
 //------------------------------------------------------------------------------------------------------
 
 unsigned long ContFramePool::get_bitmap_index(unsigned long frame_number){
-    return(frame_number - base_frame_number);
+    return(frame_number - base_frame_number); //simple function to find the bitmap index of the frame
 }
 
 //------------------------------------------------------------------------------------------------------
 
 ContFramePool::frame_status ContFramePool::check_bitmap_index(unsigned long bitmap_index){
+    //this function checks the bitmap index given to it to tell the caller if it is free, occupied, or head of sequence by using lots of binary, bitwise operations
     if(bitmap_index % 4 == 0){
         if((bitmap[bitmap_index - (bitmap_index % 4)] & 0xC0) == 0xC0)
             return free;
@@ -332,7 +359,7 @@ ContFramePool::frame_status ContFramePool::check_bitmap_index(unsigned long bitm
         else if((bitmap[bitmap_index - (bitmap_index % 4)] & 0x3) == 0x0)
             return occ;
     }else{
-        assert(false);
+        assert(false); //something went wrong
     }
     return free; //keep compiler happy
 }
@@ -340,8 +367,11 @@ ContFramePool::frame_status ContFramePool::check_bitmap_index(unsigned long bitm
 //------------------------------------------------------------------------------------------------------
 
 void ContFramePool::mark_bitmap_index(unsigned long bitmap_index, frame_status status){
+
+    //this function actuall sets individual bitmap entries to whatever we need
     unsigned char mask;
 
+    //set the mask to the appropriate mask for what we're setting it to
     if(status == free)
         mask = 0xC0;
     else if (status == occ)
@@ -349,17 +379,18 @@ void ContFramePool::mark_bitmap_index(unsigned long bitmap_index, frame_status s
     else if (status == hos)
         mask = 0x40;
 
-    mask = mask >> ((bitmap_index % 4) * 2);
+    mask = mask >> ((bitmap_index % 4) * 2); //set the mask to the correct position based on where the 2 bit index is with repsect to the char
 
-    unsigned char index_alone = bitmap[bitmap_index - (bitmap_index % 4)] & (0xC0 >> ((bitmap_index % 4) * 2));
+    unsigned char index_alone = bitmap[bitmap_index - (bitmap_index % 4)] & (0xC0 >> ((bitmap_index % 4) * 2)); //this isolates the index we're looking at by making the other bits of the char 0
 
+    //if the mask value (in hex) is larger or smaller than the isolated index value (in hex)...
     if(mask > index_alone){
         Console::puts("\nMarking bitmap position ");
         Console::puti(bitmap_index);
         Console::puts(" with this ");
         Console::puti(mask);
         Console::puts("\n");
-        bitmap[bitmap_index - (bitmap_index % 4)] = bitmap[bitmap_index - (bitmap_index % 4)] + (mask - index_alone);
+        bitmap[bitmap_index - (bitmap_index % 4)] = bitmap[bitmap_index - (bitmap_index % 4)] + (mask - index_alone); //...do this math operation to set the bit index to what we need without interfering with the other bits of the char
         Console::puts("It is now this ");
         Console::puti(bitmap[bitmap_index - (bitmap_index % 4)]);
         Console::puts("\n");
@@ -370,7 +401,7 @@ void ContFramePool::mark_bitmap_index(unsigned long bitmap_index, frame_status s
         Console::puts(" with this ");
         Console::puti(mask);
         Console::puts("\n");
-        bitmap[bitmap_index - (bitmap_index % 4)] = bitmap[bitmap_index - (bitmap_index % 4)] - (index_alone - mask);
+        bitmap[bitmap_index - (bitmap_index % 4)] = bitmap[bitmap_index - (bitmap_index % 4)] - (index_alone - mask); //...do this math operation to set the bit index to what we need without interfering with the other bits of the char
         Console::puts("It is now this ");
         Console::puti(bitmap[bitmap_index - (bitmap_index % 4)]);
         Console::puts("\n");
