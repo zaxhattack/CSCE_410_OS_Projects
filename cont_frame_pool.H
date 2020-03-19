@@ -41,25 +41,8 @@
 class ContFramePool {
     
 private:
-
-    typedef enum frame_status {free, occ, hos} frame_status; //free (11), occupied (00), head of sequence (01)
-
-    unsigned char * bitmap;
-    static ContFramePool * pool_list[1000];
-    unsigned long free_frame_number;
-    unsigned long base_frame_number;
-    unsigned long number_of_frames;
-    unsigned long info_frame_number;
-    unsigned long number_of_info_frames;
-
-    unsigned long get_bitmap_index(unsigned long frame_number); //returns the index in the bitmap associated with this frame number
-
-    frame_status check_bitmap_index(unsigned long bitmap_index); //checks the if the bitmap index in question is free, occ, or hos
-
-    void mark_bitmap_index(unsigned long bitmap_index, frame_status status);
-
-    void release_frames_pvt(unsigned long first_frame);
-
+    /* -- DEFINE YOUR CONT FRAME POOL DATA STRUCTURE(s) HERE. */
+    
 public:
 
     // The frame size is the same as the page size, duh...    
@@ -74,7 +57,7 @@ public:
      frame pool.
      _base_frame_no: Number of first frame managed by this frame pool.
      _n_frames: Size, in frames, of this frame pool.
-     EXAMPLE: If _base_frame_no is 16 and _n_frames is 4, this frame pool manages
+     EXAMPLE: If _base_frame_no is 16 and _nframes is 4, this frame pool manages
      physical frames numbered 16, 17, 18 and 19.
      _info_frame_no: Number of the first frame that should be used to store the
      management information for the frame pool.
