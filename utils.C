@@ -165,3 +165,15 @@ void outportb (unsigned short _port, char _data) {
 void outportw (unsigned short _port, unsigned short _data) {
     __asm__ __volatile__ ("outw %1, %0" : : "dN" (_port), "a" (_data));
 }
+
+void strncat ( char* dest, char* src, int num ) {
+    char *d = dest;
+    /* Find the end of destination  */
+    d += strlen (dest);
+    int srcsize = strlen (src);
+    if (srcsize > num) {
+    srcsize = num;
+    }
+    d[srcsize] = '\0';
+    memcpy (d, src, srcsize);
+}

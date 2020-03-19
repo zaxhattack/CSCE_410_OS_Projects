@@ -51,6 +51,68 @@
 #define NACCESS ((1 MB) / 4)
 /* NACCESS integer access (i.e. 4 bytes in each access) are made starting at address FAULT_ADDR */
 
+
+void access_memory_test(char* test_name, unsigned int address, unsigned int nb_values) {
+   /* -- GENERATE MEMORY REFERENCES */
+    
+    int *foo = (int *) address;
+    int i;
+
+    for (i=0; i< nb_values; i++) {
+        foo[i] = i;
+    }
+
+    Console::puts(test_name);
+    Console::puts(": Done writing to memory. Now checking values.\n");
+
+    for (i=0; i < nb_values; i++) {
+        if(foo[i] != i) {
+        Console::puts(test_name);
+            Console::puts(": TEST FAILED for access number:");
+            Console::putui(i);
+            Console::puts("\n");
+            break;
+        }
+    }
+    if(i == nb_values) {
+    Console::puts(test_name);
+        Console::puts(": TEST PASSED\n");
+    }
+}
+
+void P3_partA_test(ContFramePool* kernel_frame_manager) {
+    const int MEM_SIZE_IN_PAGES = 4;
+    unsigned int nb_ints = MEM_SIZE_IN_PAGES * Machine::PAGE_SIZE / sizeof(int); 
+    unsigned int start_frame = kernel_frame_manager->get_frames(MEM_SIZE_IN_PAGES);
+    unsigned int addr = start_frame*Machine::PAGE_SIZE;
+    access_memory_test("Part A test", addr, nb_ints);
+    // commenting out release_frames in case the ContFramePool code has a bug
+    // ContFramePool::release_frames(start_frame);
+}
+
+void P3_partB_micro_test() {
+    access_memory_test("Part B micro test", FAULT_ADDR, 128);
+}
+void P3_partB_small_test() {
+    access_memory_test("Part B small test", FAULT_ADDR, NACCESS);
+}
+
+void P3_partB_medium_test() {
+    unsigned int addresses[4] = { (8 MB), (10 MB), (16 MB - 1), (17 MB) };
+    unsigned int number_ints[4] = {1025, 32, 2, (1 MB)};
+    for (int i = 0; i < 4; i++) {
+    /* for i up to 4, we only need two positions, but in case someone decides to do
+     * more tests and forgets to increase the space for the string, declaring with 4 positions */
+    char istr[4];
+    int2str(i, istr);
+    char name[32];
+    strcpy(name, "Part B medium i ");
+    strncat(name, istr, 3);
+    access_memory_test(name, addresses[i], number_ints[i]);
+    }
+}
+
+
 /*--------------------------------------------------------------------------*/
 /* MAIN ENTRY INTO THE OS */
 /*--------------------------------------------------------------------------*/
