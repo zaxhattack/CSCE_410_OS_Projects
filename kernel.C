@@ -81,6 +81,7 @@ void access_memory_test(char* test_name, unsigned int address, unsigned int nb_v
 }
 
 void P3_partA_test(ContFramePool* kernel_frame_manager) {
+    Console::puts("Beginning Part A test...\n");
     const int MEM_SIZE_IN_PAGES = 4;
     unsigned int nb_ints = MEM_SIZE_IN_PAGES * Machine::PAGE_SIZE / sizeof(int); 
     unsigned int start_frame = kernel_frame_manager->get_frames(MEM_SIZE_IN_PAGES);
@@ -227,6 +228,8 @@ int main() {
     Console::puts("Hello World!\n");
     
     /* -- GENERATE MEMORY REFERENCES */
+
+    P3_partA_test(&kernel_mem_pool);
     
     int *foo = (int *) FAULT_ADDR;
     int i;
