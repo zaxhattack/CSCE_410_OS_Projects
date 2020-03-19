@@ -52,9 +52,9 @@ private:
   unsigned long        * page_directory;     /* where is page directory located? */
 
 public:
-  static const unsigned int PAGE_SIZE        = Machine::PAGE_SIZE; 
+  static const unsigned int PAGE_SIZE        = Machine::PAGE_SIZE; //4096
   /* in bytes */
-  static const unsigned int ENTRIES_PER_PAGE = Machine::PT_ENTRIES_PER_PAGE; 
+  static const unsigned int ENTRIES_PER_PAGE = Machine::PT_ENTRIES_PER_PAGE; //1024
   /* in entries, duh! */
 
   static void init_paging(ContFramePool * _kernel_mem_pool,
