@@ -172,6 +172,8 @@ ContFramePool::ContFramePool(unsigned long _base_frame_no,
     for (int i = 0; i < (number_of_frames / 4); ++i){
         bitmap[i] = 0xFF;
     }
+
+    mark_bitmap_index(info_frame_number, occ);
 }
 
 //------------------------------------------------------------------------------------------------------
