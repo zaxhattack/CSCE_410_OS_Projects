@@ -58,6 +58,8 @@ void uint2str(unsigned int _num, char * _str);
 
 void strncat ( char* dest, char* src, int num );
 
+
+
 #endif
 
 

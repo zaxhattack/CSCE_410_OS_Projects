@@ -229,7 +229,7 @@ int main() {
     
     /* -- GENERATE MEMORY REFERENCES */
 
-    P3_partA_test(&kernel_mem_pool);
+    //P3_partA_test(&kernel_mem_pool);
     
     int *foo = (int *) FAULT_ADDR;
     int i;

@@ -177,3 +177,4 @@ void strncat ( char* dest, char* src, int num ) {
     d[srcsize] = '\0';
     memcpy (d, src, srcsize);
 }
+
